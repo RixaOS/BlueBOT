@@ -1,0 +1,2 @@
+# BlueBOT
+Custom discord bot
