@@ -21,5 +21,3 @@ Object.values(events).forEach(({ name, execute }) => {
 });
 
 await client.login(config.DISCORD_TOKEN);
-
-const str: string = 1;
