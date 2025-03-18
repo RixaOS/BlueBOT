@@ -24,8 +24,8 @@ const client = new Client({
 Object.values(events).forEach(({ name, execute }) => {
   const eventListenerType = name === Events.ClientReady ? "once" : "on";
 
-  // @ts-expect-error https://github.com/microsoft/TypeScript/issues/30581
   client[eventListenerType](name, (...args) =>
+    // @ts-expect-error https://github.com/microsoft/TypeScript/issues/30581
     execute(...args, { logger, musicPlayer }),
   );
 });
