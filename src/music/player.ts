@@ -5,14 +5,11 @@ import {
   createAudioResource,
   joinVoiceChannel,
   VoiceConnection,
-  demuxProbe,
 } from "@discordjs/voice";
 import { Guild, GuildMember } from "discord.js";
 import ytdl from "@distube/ytdl-core"; // ✅ Use maintained version
 import type { QueueItem } from "./queue.ts"; // ✅ Import as type
 import { MusicQueue } from "./queue.ts";
-import ffmpegPath from "ffmpeg-static";
-import fs from "fs";
 
 export class MusicPlayer {
   private players = new Map<string, AudioPlayer>();
