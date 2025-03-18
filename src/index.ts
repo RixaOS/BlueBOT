@@ -15,7 +15,7 @@ const musicPlayer = new MusicPlayer(); // ✅ Create musicPlayer instance
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates, // Required for voice channel interactions
+    GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
   ],
