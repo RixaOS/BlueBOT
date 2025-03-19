@@ -13,6 +13,7 @@ export const interactionCreateEvent = createEvent({
     }
 
     if (!interaction.inCachedGuild()) {
+      await interaction.reply("❌ This command can only be used in a server.");
       return;
     }
 
