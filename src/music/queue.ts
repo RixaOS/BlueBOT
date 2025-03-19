@@ -4,7 +4,7 @@ export interface QueueItem {
 }
 
 export class MusicQueue {
-  private queues: Map<string, QueueItem[]> = new Map();
+  private queues = new Map<string, QueueItem[]>();
 
   addToQueue(guildId: string, song: QueueItem) {
     if (!this.queues.has(guildId)) {
@@ -19,7 +19,7 @@ export class MusicQueue {
 
   nextSong(guildId: string): QueueItem | null {
     const queue = this.queues.get(guildId);
-    if (!queue || queue.length === 0) return null;
+    if (!queue) return null;
     return queue.shift() || null;
   }
 

@@ -1,6 +1,6 @@
 import {
+  ApplicationCommandOptionType,
   ApplicationCommandType,
-  ChatInputCommandInteraction,
   GuildMember,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
@@ -13,19 +13,13 @@ export const playCommand = createCommand({
   options: [
     {
       name: "query",
-      type: 3, // STRING
+      type: ApplicationCommandOptionType.String,
       description: "YouTube URL or search term",
       required: true,
     },
   ],
-  async execute(interaction: ChatInputCommandInteraction, context) {
+  async execute(interaction, context) {
     console.log("🔍 Debug: musicPlayer in play.ts:", context.musicPlayer);
-
-    if (!interaction.guild) {
-      await interaction.reply("❌ This command can only be used in a server.");
-      return;
-    }
-
     const query = interaction.options.getString("query", true);
     const member = interaction.member as GuildMember;
 
@@ -45,13 +39,13 @@ export const playCommand = createCommand({
 
     try {
       const response = await context.musicPlayer.play(
-        interaction.guild,
+        interaction.guild!,
         member,
         query,
       );
       await interaction.reply(response);
     } catch (error) {
-      console.error("❌ Error in play command:", error);
+      context.logger.info("❌ Error in play command:", error);
       await interaction.reply(
         "⚠️ An error occurred while trying to play the song.",
       );

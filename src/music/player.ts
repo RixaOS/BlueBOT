@@ -16,11 +16,7 @@ export class MusicPlayer {
   private connections = new Map<string, VoiceConnection>();
   private queues = new MusicQueue();
 
-  async play(
-    guild: Guild,
-    member: GuildMember,
-    query: string,
-  ): Promise<string> {
+  async play(guild: Guild, member: GuildMember, query: string) {
     if (!member.voice.channel) {
       return "❌ You need to be in a voice channel to play music.";
     }
@@ -39,7 +35,6 @@ export class MusicPlayer {
       connection.subscribe(player);
     }
 
-    console.log("🎧 Fetching YouTube video info...");
     try {
       const songInfo = await ytdl.getInfo(query);
       const song: QueueItem = {
@@ -48,7 +43,6 @@ export class MusicPlayer {
       };
 
       this.queues.addToQueue(guild.id, song);
-      console.log(`🎵 Added to queue: ${song.title}`);
 
       if (player.state.status !== AudioPlayerStatus.Playing) {
         this.startPlayback(guild.id);
@@ -64,12 +58,9 @@ export class MusicPlayer {
   private async startPlayback(guildId: string) {
     const song = this.queues.nextSong(guildId);
     if (!song) {
-      console.log("📭 Queue is empty, disconnecting.");
       this.disconnect(guildId);
       return;
     }
-
-    console.log(`▶️ Now playing: ${song.title}`);
 
     const stream = await getYouTubeStream(song.url);
     if (!stream) {
@@ -140,8 +131,6 @@ export class MusicPlayer {
 // ✅ Function to fetch the YouTube audio stream
 async function getYouTubeStream(url: string) {
   try {
-    console.log("🔍 Fetching YouTube stream:", url);
-
     const stream = ytdl(url, {
       filter: "audioonly",
       highWaterMark: 1 << 25, // Prevents buffering issues
@@ -153,10 +142,9 @@ async function getYouTubeStream(url: string) {
       },
     });
 
-    console.log("✅ YouTube stream fetched successfully.");
     return stream;
   } catch (error) {
     console.error("❌ YouTube Fetch Error:", error);
-    return null;
+    return;
   }
 }
