@@ -194,7 +194,7 @@ function createYouTubeAgent() {
   // ✅ Use proxy if available
   if (process.env["PROXY_URL"]) {
     console.log("🛠 Using Proxy:", process.env["PROXY_URL"]);
-    client.dispatcher = new ProxyAgent(process.env["PROXY_URL"]);
+    // client.dispatcher = new ProxyAgent(process.env["PROXY_URL"]);
   }
 
   return client;
