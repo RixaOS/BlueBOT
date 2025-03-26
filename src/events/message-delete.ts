@@ -1,11 +1,10 @@
-import { Events, Message, EmbedBuilder } from "discord.js";
-import type { PartialMessage } from "discord.js";
+import { Events, EmbedBuilder } from "discord.js";
 import { createEvent } from "../create-event.ts";
 import { config } from "../config.ts";
 
 export const messageDelete = createEvent({
   name: Events.MessageDelete,
-  async execute(message: Message | PartialMessage) {
+  async execute(message) {
     if (!message.guild || message.guild.id !== config.DISCORD_DEV_GUILD_ID)
       return;
     if (!message.author || message.author.bot) return;
