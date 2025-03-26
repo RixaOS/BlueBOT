@@ -1,4 +1,4 @@
-import { Events, GuildMember, TextChannel } from "discord.js";
+import { Events, TextChannel } from "discord.js";
 import { config } from "../config.ts";
 import { createEvent } from "../create-event.ts";
 

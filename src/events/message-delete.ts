@@ -5,9 +5,7 @@ import { config } from "../config.ts";
 
 export const messageDelete = createEvent({
   name: Events.MessageDelete,
-  async execute(message: Message | PartialMessage, context) {
-    const { logger } = context;
-
+  async execute(message: Message | PartialMessage) {
     if (!message.guild || message.guild.id !== config.DISCORD_DEV_GUILD_ID)
       return;
     if (!message.author || message.author.bot) return;
