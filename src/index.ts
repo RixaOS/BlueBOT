@@ -1,4 +1,10 @@
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  Partials,
+  Options,
+} from "discord.js";
 import { config } from "./config.ts";
 import { pino, type Logger } from "pino";
 import * as events from "./events/mod.ts";
@@ -18,7 +24,13 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.MessageContent,
   ],
+  partials: [Partials.Message],
+  makeCache: Options.cacheWithLimits({
+    MessageManager: 100, // Cache last 100 messages per channel
+  }),
 });
 
 Object.values(events).forEach(({ name, execute }) => {

@@ -4,7 +4,6 @@ import {
   GuildMember,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
-import ytdl from "@distube/ytdl-core"; // ✅ Ensure correct import
 
 export const playCommand = createCommand({
   type: ApplicationCommandType.ChatInput,
@@ -19,7 +18,7 @@ export const playCommand = createCommand({
     },
   ],
   async execute(interaction, context) {
-    console.log("🔍 Debug: musicPlayer in play.ts:", context.musicPlayer);
+    console.log("🔍 Debug: musicPlayer in play.ts:", context);
     const query = interaction.options.getString("query", true);
     const member = interaction.member as GuildMember;
 
@@ -30,25 +29,32 @@ export const playCommand = createCommand({
       return;
     }
 
-    if (!ytdl.validateURL(query)) {
-      await interaction.reply(
-        "❌ Invalid YouTube URL. Please provide a valid link.",
-      );
-      return;
-    }
-
     try {
+      // ✅ Ensure only ONE reply is sent
+      await interaction.deferReply(); // ✅ Defers response to avoid timeout issues
+
       const response = await context.musicPlayer.play(
-        interaction.guild!,
+        interaction.guild,
         member,
         query,
       );
-      await interaction.reply(response);
+
+      if (interaction.replied || interaction.deferred) {
+        // ✅ Ensure we don't send a second reply
+        await interaction.editReply(response);
+      }
     } catch (error) {
-      context.logger.info("❌ Error in play command:", error);
-      await interaction.reply(
-        "⚠️ An error occurred while trying to play the song.",
-      );
+      console.error("❌ Error in play command:", error);
+
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply(
+          "⚠️ An error occurred while trying to play the song.",
+        );
+      } else {
+        await interaction.editReply(
+          "⚠️ An error occurred while trying to play the song.",
+        );
+      }
     }
   },
 });
