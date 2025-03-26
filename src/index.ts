@@ -31,6 +31,14 @@ const client = new Client({
   makeCache: Options.cacheWithLimits({
     MessageManager: 100, // Cache last 100 messages per channel
   }),
+  // Note: Sweepers in case the cache gets too much for the bot but it shouldn't for 1 server.
+  // Note: Future dev: Use a database instead of caching to watch all messages
+  // sweepers: {
+  //   messages: {
+  //     interval: 300, // Run sweeper every 5 minutes
+  //     lifetime: 600, // Remove messages older than 10 minutes
+  //   },
+  // },
 });
 
 Object.values(events).forEach(({ name, execute }) => {

@@ -2,6 +2,7 @@ import { Events, Message, EmbedBuilder, TextChannel } from "discord.js";
 import type { PartialMessage } from "discord.js";
 import { createEvent } from "../create-event.ts";
 import { config } from "../config.ts";
+import { generateTextDiff } from "../utils/diff.ts";
 
 export const messageUpdate = createEvent({
   name: Events.MessageUpdate,
@@ -52,6 +53,7 @@ export const messageUpdate = createEvent({
     const authorTag = oldMsg.author?.tag ?? "Unknown User";
     const authorId = oldMsg.author?.id ?? "unknown";
     const avatar = oldMsg.author?.displayAvatarURL() ?? null;
+    const diffPreview = generateTextDiff(oldContent, newContent);
 
     const messageLink = newMsg.guild
       ? `[Click to view](https://discord.com/channels/${newMsg.guild.id}/${newMsg.channelId}/${newMsg.id})`
@@ -70,6 +72,7 @@ export const messageUpdate = createEvent({
         { name: "Jump to Message", value: messageLink },
         { name: "Before", value: oldContent.slice(0, 1024) },
         { name: "After", value: newContent.slice(0, 1024) },
+        { name: "Changes", value: diffPreview.slice(0, 1024) },
       )
       .setTimestamp();
 
