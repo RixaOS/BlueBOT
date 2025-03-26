@@ -1,6 +1,6 @@
 import {
   ApplicationCommandType,
-  ChatInputCommandInteraction,
+  ApplicationCommandOptionType,
 } from "discord.js";
 import { config } from "../../config.ts";
 import { createCommand } from "../../create-command.ts";
@@ -15,12 +15,12 @@ export const say = createCommand({
     {
       name: "message",
       description: "The message you want the bot to say",
-      type: 3, // STRING
+      type: ApplicationCommandOptionType.String,
       required: true,
     },
   ],
 
-  async execute(interaction: ChatInputCommandInteraction<"cached">, context) {
+  async execute(interaction, context) {
     if (interaction.user.id !== OWNER_ID) {
       await interaction.reply({
         content: "🚫 You are not allowed to use this command.",
