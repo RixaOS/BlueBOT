@@ -11,7 +11,7 @@ import ytdl from "@distube/ytdl-core"; // ✅ Use maintained version
 import type { QueueItem } from "./queue.ts"; // ✅ Import as type
 import { MusicQueue } from "./queue.ts";
 import ytSearch from "yt-search";
-import ProxyAgent from "proxy-agent";
+import fs from "fs";
 
 export class MusicPlayer {
   private players = new Map<string, AudioPlayer>();
@@ -160,68 +160,29 @@ export class MusicPlayer {
   }
 }
 
-// YT_COOKIE=[{name: "SAPISID" value: "HkPALZO8XHqchsVx/A9D4qEdS4x3N8fUQq"}, {name: "APISID", value: "WWLs1e228OeP2M7Z/ADmcBmboaoKsxKurK"}, {name: "HSID", value: "AjIukwXZSBFhavmRg"}, {name: "SID", value: "g.a000uAgsv7ZdJYUJV8SV9qxBZo7r-TX7cOoG1AWuu6zsfH6QLVvmftjPY4gIRt-j1Vg28Yo0lwACgYKAQsSARASFQHGX2Miztf8qEF8emJ2Pj5GlweotxoVAUF8yKrURxfd7gDpTQt9SeNfx7m-00706"}]
-// TODO: I'm giving a JSON string to convert while I can give the correct array immediately, need to sort this out. Reference to this below.
 // WARNING: Using old cookie format, please use the new one instead. (https://github.com/distubejs/ytdl-core#cookies-support)
 
-function createYouTubeAgent() {
-  let cookies: { name: string; value: string }[] = [];
+const clientOptions = {
+  pipelining: 5,
+  maxRedirections: 0,
+};
 
-  try {
-    if (process.env["YT_COOKIE"]) {
-      const rawCookies: string[] = JSON.parse(process.env["YT_COOKIE"]);
-      if (!Array.isArray(rawCookies))
-        throw new Error("YT_COOKIE must be a valid JSON array.");
-      cookies = rawCookies.map((cookie) => {
-        const [name, ...valueParts] = cookie.split("=");
-        return { name, value: valueParts.join("=") };
-      });
+const cookiesRaw = fs.readFileSync("./cookies.json", "utf-8"); // ✅ Add encoding
+const cookies = JSON.parse(cookiesRaw);
+const agent = ytdl.createAgent(cookies, clientOptions);
 
-      console.log("✅ YouTube cookies formatted successfully.");
-    }
-  } catch (error) {
-    console.error("❌ Invalid YouTube cookie format:", error);
-    cookies = [];
-  }
-
-  const clientOptions = {
-    pipelining: 5,
-    maxRedirections: 0,
-  };
-
-  const client = ytdl.createAgent(cookies, clientOptions);
-
-  // ✅ Use proxy if available
-  if (process.env["PROXY_URL"]) {
-    console.log("🛠 Using Proxy:", process.env["PROXY_URL"]);
-    // client.dispatcher = new ProxyAgent(process.env["PROXY_URL"]);
-  }
-
-  return client;
+// ✅ Use proxy if available
+if (process.env["PROXY_URL"]) {
+  console.log("🛠 Using Proxy:", process.env["PROXY_URL"]);
+  // client.dispatcher = new ProxyAgent(process.env["PROXY_URL"]);
 }
 
 async function getYouTubeStream(url: string) {
   try {
     console.log("🔍 Fetching YouTube stream:", url);
+    console.log("🧐 Debug: Final request headers:", agent);
 
-    const client = createYouTubeAgent();
-    const cookieHeader = client.jar.getCookieStringSync(
-      "https://www.youtube.com",
-    );
-
-    const requestOptions = {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
-        "Accept-Language": "en-US,en;q=0.9",
-        Cookie: cookieHeader,
-        Authorization: `Bearer ${process.env["YT_AUTH_TOKEN"] || ""}`, // ✅ Use auth token if available
-      },
-    };
-
-    console.log("🧐 Debug: Final request headers:", requestOptions.headers);
-
-    const videoInfo = await ytdl.getInfo(url, { requestOptions });
+    const videoInfo = await ytdl.getInfo(url, { agent });
 
     if (
       !videoInfo ||
@@ -242,7 +203,7 @@ async function getYouTubeStream(url: string) {
       filter: "audioonly",
       quality: "highestaudio",
       highWaterMark: 1 << 25,
-      requestOptions,
+      agent,
       dlChunkSize: 0,
       liveBuffer: 20000,
     });

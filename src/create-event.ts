@@ -1,13 +1,15 @@
-import { type ClientEvents, type Awaitable } from "discord.js";
+import type { ClientEvents } from "discord.js";
 import type { Context } from "./index.ts";
 
-type Event<T extends keyof ClientEvents> = {
-  name: T;
-  execute: (
-    ...args: [...args: ClientEvents[T], context: Context]
-  ) => Awaitable<void>;
+// ✅ Limit to real event names
+type EventName = keyof ClientEvents;
+
+// ✅ Allow execution with context + proper event arguments
+type EventWithContext<K extends EventName> = {
+  name: K;
+  execute: (...args: [...ClientEvents[K], Context]) => void | Promise<void>;
 };
 
-export function createEvent<T extends keyof ClientEvents>(event: Event<T>) {
+export function createEvent<K extends EventName>(event: EventWithContext<K>) {
   return event;
 }

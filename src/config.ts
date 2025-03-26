@@ -5,6 +5,9 @@ const schema = z.object({
   npm_package_name: z.string(),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
   DISCORD_DEV_GUILD_ID: z.string().optional(),
+  LOG_CHANNEL_ID: z.string().optional(),
+  OWNER_ID: z.string().optional(),
+  MOD_ID: z.string().optional(),
 });
 
 const result = schema.safeParse(process.env);
