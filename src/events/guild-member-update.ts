@@ -24,17 +24,15 @@ export const guildMemberUpdate = createEvent({
 
     // ✅ Rol is nieuw toegevoegd
     if (!hadRole && hasRole) {
-      logger.info(`🎉 ${newMember.user.tag} kreeg de triggerrol!`);
-
       const channel = newMember.guild.channels.cache.get(CHANNEL_ID);
 
       if (!channel) {
-        logger.warn(`⚠️ Kanaal met ID ${CHANNEL_ID} niet gevonden.`);
+        logger.warn(`⚠️ Channel with ID ${CHANNEL_ID} not found.`);
         return;
       }
 
       if (!channel.isTextBased()) {
-        logger.warn(`⚠️ Kanaal ${channel.id} is geen tekstkanaal.`);
+        logger.warn(`⚠️ Channel ${channel.id} is not a text channel.`);
         return;
       }
 
@@ -44,10 +42,8 @@ export const guildMemberUpdate = createEvent({
         await textChannel.send({
           content: `🎪 Welcome ${newMember} as new clown in the circus 🤡`,
         });
-
-        logger.info(`✅ Welkomstbericht verstuurd naar kanaal ${CHANNEL_ID}`);
       } catch (err) {
-        logger.error("❌ Fout bij versturen van bericht:", err);
+        logger.error("❌ Error sending the message:", err);
       }
     }
   },
