@@ -1,60 +1,69 @@
 import {
-  ApplicationCommandOptionType,
   ApplicationCommandType,
-  GuildMember,
+  ApplicationCommandOptionType,
+  EmbedBuilder,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
 
-export const playCommand = createCommand({
+export const play = createCommand({
   type: ApplicationCommandType.ChatInput,
   name: "play",
-  description: "Plays a song from YouTube",
+  description: "Play a song from Spotify (via link or search).",
   options: [
     {
       name: "query",
+      description: "Spotify track link or search term",
       type: ApplicationCommandOptionType.String,
-      description: "YouTube URL or search term",
       required: true,
     },
   ],
-  async execute(interaction, context) {
-    console.log("🔍 Debug: musicPlayer in play.ts:", context);
-    const query = interaction.options.getString("query", true);
-    const member = interaction.member as GuildMember;
 
-    if (!member.voice.channel) {
-      await interaction.reply(
-        "❌ You need to be in a voice channel to play music.",
-      );
+  async execute(interaction, { musicPlayer, logger }) {
+    const query = interaction.options.getString("query", true);
+    const member = interaction.member;
+
+    if (!member || !("voice" in member) || !member.voice.channel) {
+      await interaction.reply({
+        content: "🚫 You must be in a voice channel.",
+        ephemeral: true,
+      });
       return;
     }
 
+    await interaction.deferReply();
+
     try {
-      // ✅ Ensure only ONE reply is sent
-      await interaction.deferReply(); // ✅ Defers response to avoid timeout issues
+      const response = await musicPlayer.play(interaction.guild, member, query);
 
-      const response = await context.musicPlayer.play(
-        interaction.guild,
-        member,
-        query,
-      );
+      // For display purposes, we assume the last added track is the one just added
+      const queue = musicPlayer.getQueue(interaction.guild.id);
+      const track = queue[queue.length - 1];
 
-      if (interaction.replied || interaction.deferred) {
-        // ✅ Ensure we don't send a second reply
-        await interaction.editReply(response);
+      if (!track) {
+        await interaction.editReply({ content: response });
+        return;
       }
-    } catch (error) {
-      console.error("❌ Error in play command:", error);
 
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply(
-          "⚠️ An error occurred while trying to play the song.",
-        );
-      } else {
-        await interaction.editReply(
-          "⚠️ An error occurred while trying to play the song.",
-        );
+      const embed = new EmbedBuilder()
+        .setTitle("🎵 Added to Queue")
+        .setDescription(`[${track.title}](${track.url})`)
+        .setColor(0x1db954)
+        .setFooter({ text: "Queued via Spotify" });
+
+      if (track.image) {
+        embed.setThumbnail(track.image);
       }
+
+      const sent = await interaction.editReply({
+        content: response,
+        embeds: [embed],
+      });
+
+      // Optional reactions
+      await sent.react("🎵"); // confirm
+    } catch (err) {
+      logger.error("❌ Error in /play command:", err);
+      await interaction.editReply({ content: "❌ Could not play track." });
     }
   },
 });

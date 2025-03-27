@@ -1,18 +1,13 @@
-import { Events, Message, EmbedBuilder, TextChannel } from "discord.js";
-import type { PartialMessage } from "discord.js";
+import { Events, EmbedBuilder, TextChannel } from "discord.js";
 import { createEvent } from "../create-event.ts";
 import { config } from "../config.ts";
 import { generateTextDiff } from "../utils/diff.ts";
 
 export const messageUpdate = createEvent({
   name: Events.MessageUpdate,
-  async execute(
-    oldMsg: Message | PartialMessage,
-    newMsg: Message | PartialMessage,
-    context,
-  ) {
+  async execute(oldMsg, newMsg, context) {
     const { logger } = context;
-
+    if (oldMsg.author?.id === newMsg.client.user?.id) return; // 👈 skip self
     logger.info("✏️ messageUpdate event fired!");
 
     if (!newMsg.guild || newMsg.guild.id !== config.DISCORD_DEV_GUILD_ID)
