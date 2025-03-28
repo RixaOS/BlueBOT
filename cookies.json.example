@@ -1,0 +1,19 @@
+[
+    { 
+        "name": "SAPISID", 
+        "value": "" 
+    },
+
+    { 
+        "name": "APISID", 
+        "value": "" 
+    },
+    { 
+        "name": "HSID", 
+        "value": "" 
+    },
+    {
+      "name": "SID",
+      "value": ""
+    }
+]
