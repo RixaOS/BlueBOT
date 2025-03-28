@@ -1,3 +1,9 @@
 node_modules
 .env
-cookies.json
+/cookies.json
+/servers.json
+/src/games/wordle/current_*.json
+/src/games/wordle/leaderboard_*.json
+/src/games/wordle/servers.json
+/src/games/wordle/word-of-the-day.json
+/src/data
