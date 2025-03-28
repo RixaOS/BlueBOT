@@ -9,6 +9,8 @@ export const messageDelete = createEvent({
       return;
     if (!message.author || message.author.bot) return;
 
+    if (message.author.id === message.client.user?.id) return; // 👈 skip self
+
     const logChannelId = config.LOG_CHANNEL_ID || "135388766789123456";
     const channel = message.guild.channels.cache.get(logChannelId);
     if (!channel?.isTextBased()) return;

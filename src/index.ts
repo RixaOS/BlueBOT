@@ -8,16 +8,16 @@ import {
 import { config } from "./config.ts";
 import { pino, type Logger } from "pino";
 import * as events from "./events/mod.ts";
-import { MusicPlayer } from "./music/player.ts";
+// import { MusicPlayer } from "./music/player.ts";
+// import { initLavalink } from "./services/lavalink.ts";
 
 export type Context = {
   logger: Logger;
-  musicPlayer: MusicPlayer;
+  // musicPlayer: MusicPlayer;
 };
 
 const logger = pino({ name: config.npm_package_name });
-const musicPlayer = new MusicPlayer(); // ✅ Create musicPlayer instance
-
+// export const musicPlayer = new MusicPlayer();
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -41,12 +41,17 @@ const client = new Client({
   // },
 });
 
+// initLavalink(client);
+
 Object.values(events).forEach(({ name, execute }) => {
   const eventListenerType = name === Events.ClientReady ? "once" : "on";
 
   client[eventListenerType](name, (...args) =>
     // @ts-expect-error https://github.com/microsoft/TypeScript/issues/30581
-    execute(...args, { logger, musicPlayer }),
+    execute(...args, {
+      logger,
+      // musicPlayer
+    }),
   );
 });
 

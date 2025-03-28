@@ -8,6 +8,8 @@ const schema = z.object({
   LOG_CHANNEL_ID: z.string().optional(),
   OWNER_ID: z.string().optional(),
   MOD_ID: z.string().optional(),
+  SPOTIFY_CLIENT_ID: z.string().optional(),
+  SPOTIFY_CLIENT_SECRET: z.string().optional(),
 });
 
 const result = schema.safeParse(process.env);
