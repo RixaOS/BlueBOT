@@ -9,6 +9,7 @@ import { createCommand } from "../../create-command.ts";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import fs from "fs";
+import { getServerConfig } from "../../config.ts";
 import path from "path";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,13 +18,6 @@ const GAME_FOLDER = path.join(__dirname, "..", "..", "data", "wordle");
 
 const wordsFile = path.join(GAME_FOLDER, "words.json");
 const wordOfTheDayFile = path.join(GAME_FOLDER, "word-of-the-day.json");
-const configFile = path.join(__dirname, "..", "..", "data", "servers.json");
-
-function getServerConfig(guildId: string) {
-  if (!fs.existsSync(configFile)) return null;
-  const servers = JSON.parse(fs.readFileSync(configFile, "utf8"));
-  return servers[guildId] || null;
-}
 
 function loadJSON(file: string): any {
   return JSON.parse(fs.readFileSync(file, "utf8"));
@@ -51,25 +45,6 @@ export default createCommand({
   ...new SlashCommandBuilder()
     .setName("wordle")
     .setDescription("Play the daily Wordle game!")
-    .addSubcommand((cmd) =>
-      cmd
-        .setName("setup")
-        .setDescription(
-          "Set the Wordle channel and champion role for this server",
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("channel")
-            .setDescription("Channel ID where game messages are posted")
-            .setRequired(true),
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("role")
-            .setDescription("Role ID to give the top scorer")
-            .setRequired(true),
-        ),
-    )
     .addSubcommand((cmd) =>
       cmd
         .setName("start")
@@ -116,8 +91,8 @@ export default createCommand({
       `leaderboard_${guildId}.json`,
     );
 
-    const config = getServerConfig(interaction.guildId);
-    if (!config) {
+    const channelId = getServerConfig(interaction.guildId, "gameChannelId");
+    if (!channelId) {
       await interaction.reply({
         content:
           "⚠️ This server hasn't been fully configured yet. Please run `/setup`.",
@@ -126,8 +101,10 @@ export default createCommand({
       return;
     }
 
-    const channelId = config.gameChannelId;
-    const championRoleId = config.wordleRoleId;
+    const championRoleId = getServerConfig(
+      interaction.guildId,
+      "wordleRoleId",
+    )!;
 
     if (sub === "leaderboard") {
       const leaderboard = fs.existsSync(leaderboardFile)
@@ -150,25 +127,28 @@ export default createCommand({
       return;
     }
 
-    if (sub === "start") {
-      const currentFile = path.join(GAME_FOLDER, `current_${guildId}.json`);
-      if (fs.existsSync(currentFile)) {
-        const existing = JSON.parse(fs.readFileSync(currentFile, "utf8"));
-        const startedAt = new Date(existing.startTime || "")
-          .toISOString()
-          .split("T")[0];
-        const today = new Date().toISOString().split("T")[0];
+    if (fs.existsSync(currentFile)) {
+      const existing = JSON.parse(fs.readFileSync(currentFile, "utf8"));
+      const startedAt = new Date(existing.startTime || "")
+        .toISOString()
+        .split("T")[0];
+      const today = new Date().toISOString().split("T")[0];
 
-        if (startedAt === today) {
-          await interaction.reply({
-            content:
-              "🟨 A Wordle has already been started today. Try again tomorrow!",
-            ephemeral: true,
-          });
-          return;
-        }
+      if (startedAt === today && existing.completed) {
+        await interaction.reply({
+          embeds: [
+            {
+              title:
+                "🟨 A Wordle has already been started today. Try again tomorrow!",
+              color: 0xe67e22,
+            },
+          ],
+        });
+        return;
       }
+    }
 
+    if (sub === "start") {
       function getTodayDateString(): string {
         return new Date().toISOString().split("T")[0] ?? "";
       }
@@ -209,24 +189,35 @@ export default createCommand({
           channel instanceof NewsChannel ||
           channel instanceof ThreadChannel);
 
+      let overwriteCurrent = false;
+
       if (fs.existsSync(currentFile)) {
         const current = loadJSON(currentFile);
-        if (isValidChannel) {
-          await channel.send({
-            embeds: [
-              {
-                title: "📌 Wordle Already Active",
-                description: `The current word is still in play.\n\n${formatDisplay(current.revealed)}`,
-                color: 0xe67e22,
-              },
-            ],
+        const startedAt = new Date(current.startTime || "")
+          .toISOString()
+          .split("T")[0];
+        const today = getTodayDateString();
+
+        if (startedAt === today) {
+          if (isValidChannel) {
+            await channel.send({
+              embeds: [
+                {
+                  title: "📌 Wordle Already Active",
+                  description: `The current word is still in play.\n\n${formatDisplay(current.revealed)}`,
+                  color: 0xe67e22,
+                },
+              ],
+            });
+          }
+          await interaction.reply({
+            content: "A Wordle is already active for this server.",
+            ephemeral: true,
           });
+          return;
+        } else {
+          overwriteCurrent = true; // different day, start new word
         }
-        await interaction.reply({
-          content: "A Wordle is already active for this server.",
-          ephemeral: true,
-        });
-        return;
       }
 
       let word: string;

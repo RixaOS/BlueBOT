@@ -56,6 +56,12 @@ export const setup = createCommand({
           type: ApplicationCommandOptionType.String,
           required: true,
         },
+        {
+          name: "log_channel_id",
+          description: "Optional log channel ID for message logging",
+          type: ApplicationCommandOptionType.String,
+          required: false,
+        },
       ],
     },
   ],
@@ -111,9 +117,15 @@ export const setup = createCommand({
 
     if (sub === "general") {
       const modRoleId = interaction.options.getString("mod_role_id", true);
+      const logChannelId = interaction.options.getString(
+        "log_channel_id",
+        false,
+      );
+
       servers[guild.id] = {
         ...servers[guild.id],
         modRoleId,
+        logChannelId,
       };
       saveJSON(CONFIG_FILE, servers);
       await interaction.reply({
