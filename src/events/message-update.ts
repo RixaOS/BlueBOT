@@ -1,17 +1,18 @@
 import { Events, EmbedBuilder, TextChannel } from "discord.js";
 import { createEvent } from "../create-event.ts";
-import { config } from "../config.ts";
+import { getServerConfig } from "../config.ts";
 import { generateTextDiff } from "../utils/diff.ts";
 
 export const messageUpdate = createEvent({
   name: Events.MessageUpdate,
   async execute(oldMsg, newMsg, context) {
+    const guildId = oldMsg.guildId!;
+    const logChannelId = getServerConfig(guildId, "logChannelId");
+    if (!logChannelId) return;
+
     const { logger } = context;
     if (oldMsg.author?.id === newMsg.client.user?.id) return; // 👈 skip self
     logger.info("✏️ messageUpdate event fired!");
-
-    if (!newMsg.guild || newMsg.guild.id !== config.DISCORD_DEV_GUILD_ID)
-      return;
 
     // ✅ Step 1: Fetch if partial
     try {
@@ -72,8 +73,7 @@ export const messageUpdate = createEvent({
       .setTimestamp();
 
     // ✅ Step 5: Send to log channel
-    const logChannelId = config.LOG_CHANNEL_ID || "YOUR_DEFAULT_LOG_CHANNEL_ID";
-    const channel = newMsg.guild.channels.cache.get(logChannelId);
+    const channel = newMsg.guild!.channels.cache.get(logChannelId);
 
     if (!channel?.isTextBased()) {
       logger.warn("⚠️ Log channel missing or not text-based.");

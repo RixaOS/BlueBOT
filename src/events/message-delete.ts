@@ -1,17 +1,16 @@
 import { Events, EmbedBuilder } from "discord.js";
 import { createEvent } from "../create-event.ts";
-import { config } from "../config.ts";
+import { getServerConfig } from "../config.ts";
 
 export const messageDelete = createEvent({
   name: Events.MessageDelete,
   async execute(message) {
-    if (!message.guild || message.guild.id !== config.DISCORD_DEV_GUILD_ID)
-      return;
-    if (!message.author || message.author.bot) return;
+    const guildId = message.guildId!;
+    const logChannelId = getServerConfig(guildId, "logChannelId");
+    if (!logChannelId) return;
+    if (!message.guild) return; // exit early if it's a DM
+    if (!message.author) return;
 
-    if (message.author.id === message.client.user?.id) return; // 👈 skip self
-
-    const logChannelId = config.LOG_CHANNEL_ID || "135388766789123456";
     const channel = message.guild.channels.cache.get(logChannelId);
     if (!channel?.isTextBased()) return;
 
