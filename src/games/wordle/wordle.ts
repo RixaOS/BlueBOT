@@ -189,7 +189,7 @@ export default createCommand({
           channel instanceof NewsChannel ||
           channel instanceof ThreadChannel);
 
-      let overwriteCurrent = false;
+      // let overwriteCurrent = false;
 
       if (fs.existsSync(currentFile)) {
         const current = loadJSON(currentFile);
@@ -216,7 +216,7 @@ export default createCommand({
           });
           return;
         } else {
-          overwriteCurrent = true; // different day, start new word
+          // overwriteCurrent = true; // different day, start new word
         }
       }
 
