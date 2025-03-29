@@ -1,4 +1,5 @@
 import { ApplicationCommandType, Events, codeBlock } from "discord.js";
+import { isSetupComplete } from "../utils/is-setup-complete.ts";
 import { createEvent } from "../create-event.ts";
 import * as commands from "../commands/mod.ts";
 
@@ -30,6 +31,19 @@ export const interactionCreateEvent = createEvent({
         interaction.isChatInputCommand() &&
         command.type === ApplicationCommandType.ChatInput
       ) {
+        // Block all commands unless setup is complete
+        if (
+          interaction.commandName !== "setup" &&
+          !isSetupComplete(interaction.guildId)
+        ) {
+          await interaction.reply({
+            content:
+              "⚠️ This bot has not been configured yet. Please run `/setup general`.",
+            ephemeral: true,
+          });
+          return;
+        }
+
         await command.execute(interaction, context);
       }
     } catch (error) {

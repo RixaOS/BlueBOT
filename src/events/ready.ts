@@ -43,8 +43,8 @@ export const readyEvent = createEvent({
       await client.application.commands.set([]);
       await devGuild?.commands.set(Object.values(commands));
     } else {
-      await client.application.commands.set(Object.values(commands));
       await devGuild?.commands.set([]);
+      await client.application.commands.set(Object.values(commands));
     }
 
     context.logger.info(`Deployed ${Object.values(commands).length} commands.`);
