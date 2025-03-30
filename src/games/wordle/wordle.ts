@@ -4,6 +4,7 @@ import {
   TextChannel,
   NewsChannel,
   ThreadChannel,
+  PermissionFlagsBits,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
 import { fileURLToPath } from "url";
@@ -333,7 +334,12 @@ export default createCommand({
 
         const topUserId = getTopScorer(leaderboard);
         const guild = interaction.guild;
-        if (guild && topUserId) {
+        if (
+          guild &&
+          topUserId &&
+          guild?.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) &&
+          guild?.members.me?.roles.highest
+        ) {
           for (const [, member] of await guild.members.fetch()) {
             if (
               member.roles.cache.has(championRoleId) &&
@@ -383,7 +389,14 @@ export default createCommand({
 
             // Add role to top user
             const topMember = guild.members.cache.get(topUserId);
-            if (topMember && !topMember.roles.cache.has(championRoleId)) {
+            if (
+              guild?.members.me?.permissions.has(
+                PermissionFlagsBits.ManageRoles,
+              ) &&
+              guild?.members.me?.roles.highest &&
+              topMember &&
+              !topMember.roles.cache.has(championRoleId)
+            ) {
               await topMember.roles.add(championRoleId);
             }
           }
@@ -423,7 +436,12 @@ export default createCommand({
         const topUserId = getTopScorer(leaderboard);
         const guild = interaction.guild;
 
-        if (guild && topUserId) {
+        if (
+          guild &&
+          topUserId &&
+          guild?.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) &&
+          guild?.members.me?.roles.highest
+        ) {
           const member = guild.members.cache.get(topUserId);
           if (member) {
             await member.roles.add(championRoleId);
@@ -455,6 +473,11 @@ export default createCommand({
         leaderboard[userId] = (leaderboard[userId] || 0) + 1;
         saveJSON(leaderboardFile, leaderboard);
 
+        if (fs.existsSync(currentFile)) {
+          current.completed = true;
+          saveJSON(currentFile, current);
+        }
+
         if (guild && topUserId) {
           for (const [, member] of await guild.members.fetch()) {
             // Remove role from others
@@ -468,14 +491,16 @@ export default createCommand({
 
           // Add role to top user
           const topMember = guild.members.cache.get(topUserId);
-          if (topMember && !topMember.roles.cache.has(championRoleId)) {
+          if (
+            guild?.members.me?.permissions.has(
+              PermissionFlagsBits.ManageRoles,
+            ) &&
+            guild?.members.me?.roles.highest &&
+            topMember &&
+            !topMember.roles.cache.has(championRoleId)
+          ) {
             await topMember.roles.add(championRoleId);
           }
-        }
-
-        if (fs.existsSync(currentFile)) {
-          current.completed = true;
-          saveJSON(currentFile, current);
         }
       } else {
         if (

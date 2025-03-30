@@ -1,6 +1,7 @@
 import {
   ApplicationCommandType,
   ApplicationCommandOptionType,
+  PermissionFlagsBits,
 } from "discord.js";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -25,6 +26,8 @@ export const setup = createCommand({
   type: ApplicationCommandType.ChatInput,
   name: "setup",
   description: "Configure server settings for different modules.",
+  default_member_permissions: PermissionFlagsBits.Administrator.toString(), // ✅ hides for non-admins
+  dm_permission: false, // ❌ don't allow in DMs
   options: [
     {
       name: "wordle",
@@ -41,7 +44,7 @@ export const setup = createCommand({
           name: "champion_role_id",
           description: "Champion role ID to award top scorers",
           type: ApplicationCommandOptionType.String,
-          required: true,
+          required: false,
         },
       ],
     },
@@ -68,16 +71,7 @@ export const setup = createCommand({
 
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
-
     const guild = interaction.guild;
-
-    if (!guild) {
-      await interaction.reply({
-        content: "❌ This command must be run in a server.",
-        ephemeral: true,
-      });
-      return;
-    }
 
     if (!isAdminOrOwner(interaction)) {
       await interaction.reply({
@@ -97,7 +91,7 @@ export const setup = createCommand({
       );
       const wordleRoleId = interaction.options.getString(
         "champion_role_id",
-        true,
+        false,
       );
 
       servers[guild.id] = {
