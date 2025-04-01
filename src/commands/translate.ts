@@ -52,8 +52,7 @@ export const translate = createCommand({
       });
 
       const translated =
-        completion.choices[0]?.message?.content ??
-        "❌ Geen vertaling gevonden.";
+        completion.choices[0]?.message?.content ?? "❌ No translation found.";
 
       const embed = new EmbedBuilder()
         .setTitle("🌍 Translation")
@@ -68,7 +67,7 @@ export const translate = createCommand({
       await interaction.editReply({ embeds: [embed] });
     } catch (err) {
       console.error("❌ OpenAI translation error:", err);
-      await interaction.editReply("❌ Er ging iets mis bij het vertalen.");
+      await interaction.editReply("❌ Something went wrong translating.");
     }
   },
 });
