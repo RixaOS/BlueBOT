@@ -16,6 +16,7 @@ const schema = z.object({
   OWNER_ID: z.string().optional(),
   SPOTIFY_CLIENT_ID: z.string().optional(),
   SPOTIFY_CLIENT_SECRET: z.string().optional(),
+  OPENAPI_KEY: z.string().optional(),
 });
 
 export function getServerConfig(guildId: string, key: string): string | null {
