@@ -1,5 +1,8 @@
 export * from "./test.ts";
 export * from "./fun/say.ts";
+export * from "./fun/ask.ts";
+export * from "./translate.ts";
+
 export * from "./moderation/setup.ts";
 
 export { default as wordle } from "../games/wordle/wordle.ts";

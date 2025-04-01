@@ -46,6 +46,13 @@ export const interactionCreateEvent = createEvent({
 
         await command.execute(interaction, context);
       }
+      // ✅ NEW: Handle message context menu commands
+      if (
+        interaction.isMessageContextMenuCommand() &&
+        command.type === ApplicationCommandType.Message
+      ) {
+        await command.execute(interaction, context);
+      }
     } catch (error) {
       if (
         error &&
@@ -53,10 +60,21 @@ export const interactionCreateEvent = createEvent({
         "message" in error &&
         typeof error.message === "string"
       ) {
-        await interaction.editReply({
-          content: `Error:\n${codeBlock(error.message)}`,
-          components: [],
-        });
+        try {
+          if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({
+              content: `Error:\n${codeBlock(error.message)}`,
+              components: [],
+            });
+          } else {
+            await interaction.reply({
+              content: `Error:\n${codeBlock(error.message)}`,
+              ephemeral: true,
+            });
+          }
+        } catch (err) {
+          console.error("❌ Failed to respond with error:", err);
+        }
       }
     }
   },
