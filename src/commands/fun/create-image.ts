@@ -5,17 +5,12 @@ import {
   Colors,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
-import OpenAI from "openai";
-import { config } from "../../config.ts";
+import { openai } from "../../config.ts";
 
 // In-memory cooldown map (userId → timestamp)
 const cooldowns = new Map<string, number>();
 
 const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-
-const openai = new OpenAI({
-  apiKey: config.OPENAPI_KEY,
-});
 
 export const generateImage = createCommand({
   type: ApplicationCommandType.ChatInput,

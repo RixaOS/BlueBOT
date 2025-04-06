@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import fs from "fs";
 import path from "path";
+import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,3 +34,7 @@ if (!result.success) {
 }
 
 export const config = result.data;
+
+export const openai = new OpenAI({
+  apiKey: config.OPENAPI_KEY,
+});

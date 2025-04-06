@@ -1,7 +1,6 @@
 import { Events, EmbedBuilder, Colors } from "discord.js";
 import { createEvent } from "../create-event.ts";
-import OpenAI from "openai";
-import { config, getServerConfig } from "../config.ts";
+import { getServerConfig, openai } from "../config.ts";
 import fs from "fs";
 import path from "path";
 
@@ -22,8 +21,6 @@ function loadPending(): Record<string, any> {
 function savePending(data: Record<string, any>) {
   fs.writeFileSync(pendingFilePath, JSON.stringify(data, null, 2));
 }
-
-const openai = new OpenAI({ apiKey: config.OPENAPI_KEY });
 
 const INVITE_REGEX =
   /(?:https?:\/\/)?(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/[a-zA-Z0-9]+/i;

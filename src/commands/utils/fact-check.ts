@@ -5,10 +5,7 @@ import {
   Message,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
-import OpenAI from "openai";
-import { config } from "../../config.ts";
-
-const openai = new OpenAI({ apiKey: config.OPENAPI_KEY });
+import { openai } from "../../config.ts";
 
 export const factCheck = createCommand({
   type: ApplicationCommandType.Message,
