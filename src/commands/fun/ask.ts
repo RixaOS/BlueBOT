@@ -31,11 +31,11 @@ export const ask = createCommand({
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo", // of gpt-4 als je dat wilt
+        model: "gpt-4o", // of gpt-4 als je dat wilt
         messages: [
           {
             role: "user",
-            content: question,
+            content: `${question}. Strictly make sure the response stops when theres >= 1024 signs.`,
           },
         ],
       });
@@ -48,7 +48,7 @@ export const ask = createCommand({
         .setDescription(question)
         .setColor(Colors.Blue)
         .addFields([{ name: "📝 Answer", value: answer }])
-        .setFooter({ text: "OpenAI ChatGPT • GPT-3.5" })
+        .setFooter({ text: "OpenAI ChatGPT • GPT-4o" })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });

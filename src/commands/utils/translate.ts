@@ -4,9 +4,9 @@ import {
   Colors,
   Message,
 } from "discord.js";
-import { createCommand } from "../create-command.ts";
+import { createCommand } from "../../create-command.ts";
 import OpenAI from "openai";
-import { config } from "../config.ts";
+import { config } from "../../config.ts";
 
 const openai = new OpenAI({ apiKey: config.OPENAPI_KEY });
 
@@ -42,7 +42,7 @@ export const translate = createCommand({
           {
             role: "system",
             content:
-              "You are a translation assistant. Detect the source language and translate the following text to English. Respond with only the translated text.",
+              "You are a translation assistant. Detect the source language and translate the following text to English. Respond with only the translated text. Strictly make sure the response stops when theres >= 1024 signs.",
           },
           {
             role: "user",
