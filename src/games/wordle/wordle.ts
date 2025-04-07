@@ -334,22 +334,6 @@ export default createCommand({
 
         const topUserId = getTopScorer(leaderboard);
         const guild = interaction.guild;
-        if (
-          guild &&
-          topUserId &&
-          guild?.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) &&
-          guild?.members.me?.roles.highest
-        ) {
-          for (const [, member] of await guild.members.fetch()) {
-            if (
-              member.roles.cache.has(championRoleId) &&
-              member.id !== topUserId
-            ) {
-              await member.roles.remove(championRoleId);
-            }
-          }
-          await guild.members.cache.get(topUserId)?.roles.add(championRoleId);
-        }
 
         if (
           channel &&
@@ -373,10 +357,7 @@ export default createCommand({
             ephemeral: true,
           });
 
-          leaderboard[userId] = (leaderboard[userId] || 0) + 1;
-          saveJSON(leaderboardFile, leaderboard);
-
-          if (guild && topUserId) {
+          if (championRoleId && guild && topUserId) {
             for (const [, member] of await guild.members.fetch()) {
               // Remove role from others
               if (
@@ -437,6 +418,7 @@ export default createCommand({
         const guild = interaction.guild;
 
         if (
+          championRoleId &&
           guild &&
           topUserId &&
           guild?.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) &&
@@ -470,15 +452,12 @@ export default createCommand({
           ephemeral: true,
         });
 
-        leaderboard[userId] = (leaderboard[userId] || 0) + 1;
-        saveJSON(leaderboardFile, leaderboard);
-
         if (fs.existsSync(currentFile)) {
           current.completed = true;
           saveJSON(currentFile, current);
         }
 
-        if (guild && topUserId) {
+        if (championRoleId && guild && topUserId) {
           for (const [, member] of await guild.members.fetch()) {
             // Remove role from others
             if (

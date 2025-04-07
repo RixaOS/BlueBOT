@@ -65,6 +65,12 @@ export const setup = createCommand({
           type: ApplicationCommandOptionType.String,
           required: false,
         },
+        {
+          name: "notify_channel_id",
+          description: "Optional channel ID to notify users of a warning",
+          type: ApplicationCommandOptionType.String,
+          required: false,
+        },
       ],
     },
   ],
@@ -115,11 +121,16 @@ export const setup = createCommand({
         "log_channel_id",
         false,
       );
+      const notifyChannelId = interaction.options.getString(
+        "notify_channel_id",
+        false,
+      );
 
       servers[guild.id] = {
         ...servers[guild.id],
         modRoleId,
         logChannelId,
+        notifyChannelId,
       };
       saveJSON(CONFIG_FILE, servers);
       await interaction.reply({

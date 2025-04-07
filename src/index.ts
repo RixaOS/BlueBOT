@@ -26,6 +26,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions,
   ],
   partials: [Partials.Message],
   makeCache: Options.cacheWithLimits({
