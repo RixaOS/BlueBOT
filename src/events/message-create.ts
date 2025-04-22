@@ -50,86 +50,71 @@ export const messageCreate = createEvent({
       return;
     }
 
+    const whitelistPatterns = [/Gay ass!/i, /Get out this dick/i, /wtf/i];
+
+    if (whitelistPatterns.some((pattern) => pattern.test(message.content)))
+      return;
+
     // 🔍 Use GPT to evaluate for toxicity/rule breaking
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You're a moderation assistant for a Discord server.
-            Only flag messages that include:
-            - hate speech or slurs
-            - violent threats
-            - targeted harassment
-
-            Ignore sarcasm, mild language, or personal disagreements.
-
-            Respond with JSON:
-            {
-            "violation": true | false,
-            "severity": "low" | "medium" | "high",
-            "reason": "Short explanation of why this message was flagged"
-            }
-
-            Only respond with the JSON.`,
-          },
-          {
-            role: "user",
-            content: message.content,
-          },
-        ],
+      const response = await openai.moderations.create({
+        input: message.content,
       });
 
-      const raw = completion.choices[0]?.message?.content;
-      const result = raw ? JSON.parse(raw) : null;
-      if (!result || !result.violation) return;
+      const results = response.results[0];
 
-      const { severity, reason } = result;
+      if (results?.flagged) {
+        const flaggedCategories = Object.entries(results.categories)
+          .filter(([_, flagged]) => flagged)
+          .map(([category]) => category);
 
-      const messageLink = message.guild
-        ? `[Click to view](https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id})`
-        : "*Unavailable*";
+        // If only "violence" was flagged,
+        if (flaggedCategories[0] === "sexual") {
+          return;
+        }
 
-      // 📝 Log to mod channel
-      if (modChannel?.isTextBased()) {
-        const embed = new EmbedBuilder()
-          .setTitle("🚨 Message Flagged by AI")
-          .setColor(
-            severity === "high"
-              ? Colors.Red
-              : severity === "medium"
-                ? Colors.Orange
-                : Colors.Yellow,
-          )
-          .addFields(
-            {
-              name: "User",
-              value: `<@${message.author.id}> (${message.author.tag})`,
-            },
-            { name: "Channel", value: `<#${message.channel.id}>` },
-            { name: "Message", value: message.content.slice(0, 1024) },
-            { name: "Jump to Message", value: messageLink },
-            { name: "Reason", value: reason },
-            { name: "Severity", value: severity, inline: true },
-          )
-          .setTimestamp();
+        const messageLink = message.guild
+          ? `[Click to view](https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id})`
+          : "*Unavailable*";
 
-        const logMessage = await modChannel.send({ embeds: [embed] });
+        const reason = Object.entries(results.categories)
+          .filter(([_, flagged]) => flagged)
+          .map(([category]) => category)
+          .join(", ");
 
-        await logMessage.react("✅"); // Approve
-        await logMessage.react("❌"); // Decline
+        // 📝 Log to mod channel
+        if (modChannel?.isTextBased()) {
+          const embed = new EmbedBuilder()
+            .setTitle("🚨 Message Flagged by AI")
+            .setColor(Colors.DarkVividPink)
+            .addFields(
+              {
+                name: "User",
+                value: `<@${message.author.id}> (${message.author.tag})`,
+              },
+              { name: "Channel", value: `<#${message.channel.id}>` },
+              { name: "Message", value: message.content.slice(0, 1024) },
+              { name: "Jump to Message", value: messageLink },
+              { name: "Reason", value: reason },
+            )
+            .setTimestamp();
 
-        const pending = loadPending();
-        pending[logMessage.id] = {
-          guildId: message.guild.id,
-          userId: message.author.id,
-          originalMessageId: message.id,
-          originalMessageChannelId: message.channel.id,
-          originalContent: message.content,
-          reason,
-        };
-        savePending(pending);
+          const logMessage = await modChannel.send({ embeds: [embed] });
+
+          await logMessage.react("✅"); // Approve
+          await logMessage.react("❌"); // Decline
+
+          const pending = loadPending();
+          pending[logMessage.id] = {
+            guildId: message.guild.id,
+            userId: message.author.id,
+            originalMessageId: message.id,
+            originalMessageChannelId: message.channel.id,
+            originalContent: message.content,
+            reason,
+          };
+          savePending(pending);
+        }
       }
     } catch (err) {
       console.error("❌ Moderation error:", err);

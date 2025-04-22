@@ -238,6 +238,7 @@ export default createCommand({
         guessedLetters: [],
         startTime: new Date().toISOString(),
         lastGuesses: {},
+        lastWordGuesses: {},
       };
 
       saveJSON(currentFile, current);
@@ -404,6 +405,19 @@ export default createCommand({
       } catch (err) {
         console.error("Failed to fetch channel:", err);
       }
+
+      const now = new Date();
+      const last = new Date(current.lastWordGuesses?.[userId] || 0);
+      if (now.getTime() - last.getTime() < 3600000) {
+        await interaction.reply({
+          content: "You can only guess one word per hour.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      current.lastWordGuesses[userId] = now.toISOString();
+      saveJSON(currentFile, current);
 
       const isCorrect = guess === current.word;
 

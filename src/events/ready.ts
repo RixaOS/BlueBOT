@@ -20,9 +20,9 @@ export const readyEvent = createEvent({
           const messages = await (channel as TextChannel).messages.fetch({
             limit: 100,
           });
-          logger.info(
-            `📥 Cached ${messages.size} messages from #${channel.name}`,
-          );
+          // logger.info(
+          //   `📥 Cached ${messages.size} messages from #${channel.name}`,
+          // );
         } catch (err) {
           logger.info(
             `⚠️ Failed to fetch messages in #${channel.name} or there aren't any messages`,
