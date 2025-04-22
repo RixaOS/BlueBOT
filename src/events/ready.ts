@@ -17,7 +17,7 @@ export const readyEvent = createEvent({
         if (!channel.isTextBased()) continue;
 
         try {
-          const messages = await (channel as TextChannel).messages.fetch({
+          await (channel as TextChannel).messages.fetch({
             limit: 100,
           });
           // logger.info(
