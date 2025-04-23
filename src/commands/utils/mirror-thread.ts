@@ -79,8 +79,11 @@ export const mirrorThread = createCommand({
     }
 
     // Fetch first message from thread
-    const messages = await thread.messages.fetch({ limit: 1 });
-    const firstMessage = messages.first();
+    const messages = await thread.messages.fetch({ limit: 100 });
+    const firstMessage = messages
+      .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
+      .first();
+
     if (!firstMessage) {
       await interaction.editReply(
         "❌ Could not read the original thread's content.",
@@ -88,6 +91,7 @@ export const mirrorThread = createCommand({
       return;
     }
 
+    const originalAuthor = firstMessage.author;
     const attachments = [...firstMessage.attachments.values()];
 
     // 🏷️ Get original tag names from source thread
@@ -145,9 +149,9 @@ export const mirrorThread = createCommand({
     // 📤 Mirror the thread
     const mirroredThread = await targetChannel.threads.create({
       name: thread.name,
-      appliedTags: matchingTargetTagIds,
+      appliedTags: matchingTargetTagIds, // or [] if none
       message: {
-        content: firstMessage.content || "*[No content]*",
+        content: `👤 Original post by <@${originalAuthor.id}>\n\n---\n${firstMessage.content}`,
         files: attachments.map((a) => ({
           attachment: a.url,
           name: a.name,

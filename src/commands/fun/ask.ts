@@ -30,19 +30,19 @@ export const ask = createCommand({
         messages: [
           {
             role: "user",
-            content: `${question}. Strictly make sure the response stops when theres >= 1024 signs.`,
+            content: `${question}.`,
           },
         ],
       });
 
       const answer =
         completion.choices[0]?.message?.content ?? "No answer found.";
-
+      const safeString = answer.slice(0, 1024);
       const embed = new EmbedBuilder()
         .setTitle("🤖 ChatGPT Answers")
         .setDescription(question)
         .setColor(Colors.Blue)
-        .addFields([{ name: "📝 Answer", value: answer }])
+        .addFields([{ name: "📝 Answer", value: safeString }])
         .setFooter({ text: "OpenAI ChatGPT • GPT-4o" })
         .setTimestamp();
 
