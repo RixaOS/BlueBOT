@@ -6,7 +6,12 @@ import path from "path";
 import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export const __dirname = dirname(__filename);
+export const srcPath = path.join(process.cwd(), "src");
+export const dataPath = path.join(srcPath, "data");
+export const resolveData = (...segments: string[]) =>
+  path.join(dataPath, ...segments);
+
 const configFile = path.join(__dirname, "data", "servers.json");
 
 const schema = z.object({
@@ -38,3 +43,43 @@ export const config = result.data;
 export const openai = new OpenAI({
   apiKey: config.OPENAPI_KEY,
 });
+
+export function parseRichText(raw?: string): string {
+  if (!raw) return "";
+
+  try {
+    const json = JSON.parse(raw);
+    const lines: string[] = [];
+
+    for (const item of json.content ?? []) {
+      // List items (e.g., pros, cons)
+      if (
+        item.nodeType === "unordered-list" ||
+        item.nodeType === "ordered-list"
+      ) {
+        for (const listItem of item.content ?? []) {
+          const paragraph = listItem.content?.[0];
+          const textNode = paragraph?.content?.[0];
+          const value = textNode?.value;
+          if (typeof value === "string") {
+            lines.push("• " + value.trim());
+          }
+        }
+      }
+
+      // Fallback: plain paragraphs
+      if (item.nodeType === "paragraph") {
+        const textNode = item.content?.[0];
+        const value = textNode?.value;
+        if (typeof value === "string" && value.trim()) {
+          lines.push(value.trim());
+        }
+      }
+    }
+
+    return lines.join("\n").trim();
+  } catch (err) {
+    console.warn("❌ Failed to parse contentful rich text:", err);
+    return "";
+  }
+}

@@ -2,6 +2,7 @@ import {
   ApplicationCommandType,
   ApplicationCommandOptionType,
   Colors,
+  PermissionFlagsBits,
   EmbedBuilder,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
@@ -12,7 +13,9 @@ import { getServerConfig } from "../../config.ts";
 export const warn = createCommand({
   type: ApplicationCommandType.ChatInput,
   name: "warn",
+  dm_permission: false, // ❌ don't allow in DMs
   description: "Manually issue a warning to a user.",
+  default_member_permissions: PermissionFlagsBits.Administrator.toString(), // ✅ hides for non-admins
   options: [
     {
       name: "user",
@@ -30,8 +33,6 @@ export const warn = createCommand({
 
   async execute(interaction) {
     const { guildId, user } = interaction;
-    if (!guildId) return;
-
     const target = interaction.options.getUser("user", true);
     const reason = interaction.options.getString("reason", true);
 

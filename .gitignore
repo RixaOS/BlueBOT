@@ -7,3 +7,5 @@ node_modules
 /src/games/wordle/servers.json
 /src/games/wordle/word-of-the-day.json
 /src/data
+/generateCharacterMap.ts
+/src/generateCharacterMap.ts

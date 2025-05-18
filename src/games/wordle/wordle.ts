@@ -7,14 +7,10 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 import fs from "fs";
-import { getServerConfig } from "../../config.ts";
+import { getServerConfig, __dirname } from "../../config.ts";
 import path from "path";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 const GAME_FOLDER = path.join(__dirname, "..", "..", "data", "wordle");
 
 const wordsFile = path.join(GAME_FOLDER, "words.json");
