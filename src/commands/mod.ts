@@ -7,6 +7,8 @@ export * from "./utils/translate.ts";
 export * from "./utils/fact-check.ts";
 export * from "./utils/mirror-thread.ts";
 
+// export * from "./music/play.ts";
+
 export * from "./moderation/setup.ts";
 export * from "./moderation/warnings.ts";
 export * from "./moderation/warn.ts";

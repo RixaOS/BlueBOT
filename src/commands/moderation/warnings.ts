@@ -15,6 +15,7 @@ import path from "path";
 export const warnings = createCommand({
   type: ApplicationCommandType.ChatInput,
   name: "warnings",
+  dm_permission: false, // ❌ don't allow in DMs
   description: "View all warnings or a specific user's warning history.",
   options: [
     {
@@ -27,8 +28,6 @@ export const warnings = createCommand({
 
   async execute(interaction) {
     const { guildId } = interaction;
-    if (!guildId) return;
-
     const userOption = interaction.options.getUser("user");
     const filePath = path.resolve(
       `src/data/moderation/warnings_${guildId}.json`,

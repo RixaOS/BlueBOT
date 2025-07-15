@@ -6,6 +6,11 @@ export const guildMemberAdd = createEvent({
   name: Events.GuildMemberAdd,
   async execute(member) {
     const logChannelId = getServerConfig(member.guild.id, "logChannelId");
+
+    if (!logChannelId) {
+      return;
+    }
+
     const logChannel = member.guild.channels.cache.get(logChannelId ?? "");
 
     if (!logChannel?.isTextBased()) return;

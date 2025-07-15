@@ -8,10 +8,10 @@ import {
 } from "discord.js";
 import { createCommand } from "../../create-command.ts";
 import fs from "fs";
-import { getServerConfig, __dirname } from "../../config.ts";
+import { getServerConfig, srcPath } from "../../config.ts";
 import path from "path";
 
-const GAME_FOLDER = path.join(__dirname, "..", "..", "data", "wordle");
+const GAME_FOLDER = path.join(srcPath, "data", "wordle");
 
 const wordsFile = path.join(GAME_FOLDER, "words.json");
 const wordOfTheDayFile = path.join(GAME_FOLDER, "word-of-the-day.json");

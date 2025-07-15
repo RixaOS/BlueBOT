@@ -12,7 +12,7 @@ export const dataPath = path.join(srcPath, "data");
 export const resolveData = (...segments: string[]) =>
   path.join(dataPath, ...segments);
 
-const configFile = path.join(__dirname, "data", "servers.json");
+const configFile = path.join(srcPath, "data", "servers.json");
 
 const schema = z.object({
   DISCORD_TOKEN: z.string(),
@@ -22,6 +22,8 @@ const schema = z.object({
   OWNER_ID: z.string().optional(),
   SPOTIFY_CLIENT_ID: z.string().optional(),
   SPOTIFY_CLIENT_SECRET: z.string().optional(),
+  SPOTIFY_EMAIL: z.string().optional(),
+  SPOTIFY_PASSWORD: z.string().optional(),
   OPENAPI_KEY: z.string().optional(),
 });
 
@@ -44,42 +46,131 @@ export const openai = new OpenAI({
   apiKey: config.OPENAPI_KEY,
 });
 
-export function parseRichText(raw?: string): string {
-  if (!raw) return "";
+export function parseRichText(raw?: object | string): string {
+  if (!raw) return "No description available.";
+
+  function cleanRichText(node: any): any | null {
+    if (!node || typeof node !== "object") return null;
+
+    if (node.nodeType === "text" && !node.value?.trim()) return null;
+
+    const cleanedContent = Array.isArray(node.content)
+      ? node.content.map(cleanRichText).filter(Boolean)
+      : undefined;
+
+    const hasValue =
+      node.nodeType === "text" &&
+      typeof node.value === "string" &&
+      node.value.trim();
+
+    const hasChildren = cleanedContent && cleanedContent.length > 0;
+
+    if (!hasValue && !hasChildren && node.nodeType !== "text") return null;
+
+    const cleanedNode: any = { nodeType: node.nodeType };
+    if (hasChildren) cleanedNode.content = cleanedContent;
+    if (hasValue) cleanedNode.value = node.value;
+    if (Array.isArray(node.marks) && node.marks.length > 0)
+      cleanedNode.marks = node.marks;
+
+    return cleanedNode;
+  }
+
+  function renderInline(nodes: any[]): string {
+    return nodes
+      .map((node) => {
+        if (node.nodeType === "text" && typeof node.value === "string") {
+          const isBold = node.marks?.some((m: any) => m.type === "bold");
+          return isBold ? `**${node.value}**` : node.value;
+        }
+        if (Array.isArray(node.content)) {
+          return renderInline(node.content);
+        }
+        return "";
+      })
+      .join("");
+  }
+
+  function extractText(
+    nodes: any[],
+    listType: "unordered" | "ordered" | null = null,
+  ): string {
+    let index = 1;
+
+    return nodes
+      .map((node) => {
+        if (node.nodeType === "paragraph") {
+          return renderInline(node.content ?? []);
+        }
+
+        if (node.nodeType === "list-item") {
+          const text = extractText(node.content ?? []);
+          return listType === "ordered" ? `${index++}. ${text}` : `• ${text}`;
+        }
+
+        if (node.nodeType === "unordered-list") {
+          return extractText(node.content ?? [], "unordered");
+        }
+
+        if (node.nodeType === "ordered-list") {
+          index = 1;
+          return extractText(node.content ?? [], "ordered");
+        }
+
+        if (Array.isArray(node.content)) {
+          return extractText(node.content, listType);
+        }
+
+        return "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  }
 
   try {
-    const json = JSON.parse(raw);
-    const lines: string[] = [];
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const cleaned = cleanRichText(parsed);
+    if (!cleaned?.content?.length) return "No description available.";
 
-    for (const item of json.content ?? []) {
-      // List items (e.g., pros, cons)
-      if (
-        item.nodeType === "unordered-list" ||
-        item.nodeType === "ordered-list"
-      ) {
-        for (const listItem of item.content ?? []) {
-          const paragraph = listItem.content?.[0];
-          const textNode = paragraph?.content?.[0];
-          const value = textNode?.value;
-          if (typeof value === "string") {
-            lines.push("• " + value.trim());
-          }
-        }
-      }
-
-      // Fallback: plain paragraphs
-      if (item.nodeType === "paragraph") {
-        const textNode = item.content?.[0];
-        const value = textNode?.value;
-        if (typeof value === "string" && value.trim()) {
-          lines.push(value.trim());
-        }
-      }
-    }
-
-    return lines.join("\n").trim();
+    return extractText(cleaned.content).trim() || "No description available.";
   } catch (err) {
-    console.warn("❌ Failed to parse contentful rich text:", err);
+    console.warn("❌ Failed to parse and clean rich text:", err);
+    return "No description available.";
+  }
+}
+
+export function parseRichBullets(raw?: string | object): string {
+  if (!raw) return "";
+
+  function extractListItems(nodes: any[]): string[] {
+    return nodes.flatMap((node) => {
+      if (node.nodeType === "list-item") {
+        const inner = node.content?.flatMap(
+          (child: any) =>
+            child.content?.map((n: any) => {
+              const isBold = n.marks?.some((m: any) => m.type === "bold");
+              return isBold ? `**${n.value}**` : n.value;
+            }) ?? [],
+        );
+        return [`• ${inner?.join("")?.trim()}`];
+      }
+
+      if (Array.isArray(node.content)) {
+        return extractListItems(node.content);
+      }
+
+      return [];
+    });
+  }
+
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed?.content) return "";
+
+    const items = extractListItems(parsed.content);
+    return items.join("\n").trim();
+  } catch (err) {
+    console.warn("❌ Failed to parse bullet list:", err);
     return "";
   }
 }

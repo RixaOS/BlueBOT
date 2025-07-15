@@ -48,7 +48,7 @@ export const generateImage = createCommand({
       const response = await openai.images.generate({
         prompt,
         model: "dall-e-3",
-        size: "1024x1024",
+        size: "1792x1024",
         n: 1,
       });
 

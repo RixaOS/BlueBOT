@@ -10,6 +10,7 @@ import { createCommand } from "../../create-command.ts";
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
+import { parseRichText } from "../../config.ts";
 
 const elementEmojis = {
   Fire: "🔥",
@@ -26,19 +27,19 @@ const characterMapPath = path.join(
 );
 const characterMap = JSON.parse(fs.readFileSync(characterMapPath, "utf-8"));
 
-function parseRichText(raw: string): string {
-  try {
-    const json = JSON.parse(raw);
-    return (
-      json.content
-        ?.map((p: any) => p.content?.map((n: any) => n.value).join("") ?? "")
-        .join("\n\n")
-        .trim() || "No description."
-    );
-  } catch {
-    return "No description.";
-  }
-}
+// function parseRichText(raw: string): string {
+//   try {
+//     const json = JSON.parse(raw);
+//     return (
+//       json.content
+//         ?.map((p: any) => p.content?.map((n: any) => n.value).join("") ?? "")
+//         .join("\n\n")
+//         .trim() || "No description."
+//     );
+//   } catch {
+//     return "No description.";
+//   }
+// }
 
 export const hsrCommand = createCommand({
   type: ApplicationCommandType.ChatInput,
@@ -87,6 +88,9 @@ export const hsrCommand = createCommand({
                   description?: {
                     raw: string; // stringified JSON representing rich text
                   };
+                  statsComments?: {
+                    raw: string;
+                  };
                   defaultRole?: string;
                 }>;
               };
@@ -111,7 +115,8 @@ export const hsrCommand = createCommand({
           path: node.path ?? "Unknown",
           rarity: Number(node.rarity ?? "0"),
           role: node.defaultRole ?? "—",
-          description: parseRichText(node.description?.raw ?? ""),
+          description: parseRichText(node.description?.raw), // ← not stringified!
+          overview: parseRichText(node.statsComments?.raw),
         };
 
         characterMap[matchedKey].details = details;
@@ -144,12 +149,16 @@ export const hsrCommand = createCommand({
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setLabel("Pros and Cons")
-        .setCustomId(`hsr_procon_${matchedKey}`)
+        .setLabel("Overview")
+        .setCustomId(`hsr_overview_${matchedKey}`)
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setLabel("Relics")
         .setCustomId(`hsr_relics_${matchedKey}`)
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setLabel("Planars")
+        .setCustomId(`hsr_planars_${matchedKey}`)
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setLabel("Light Cones")
@@ -158,10 +167,6 @@ export const hsrCommand = createCommand({
       new ButtonBuilder()
         .setLabel("Teams")
         .setCustomId(`hsr_teams_${matchedKey}`)
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setLabel("Traces")
-        .setCustomId(`hsr_traces_${matchedKey}`)
         .setStyle(ButtonStyle.Secondary),
     );
 
