@@ -7,11 +7,12 @@ import {
   ApplicationCommandOptionType,
   ChannelType,
 } from "discord.js";
+import { srcPath } from "../../config.ts";
 
 const getWhitelistPath = (guildId: string) =>
-  path.join(__dirname, `../../data/moderation/whitelist_${guildId}.json`);
+  path.join(srcPath, "data", `/moderation/whitelist_${guildId}.json`);
 
-export function loadGuildWhitelist(guildId: string): {
+function loadGuildWhitelist(guildId: string): {
   users: string[];
   channels: string[];
   patterns: string[];
@@ -25,7 +26,7 @@ export function loadGuildWhitelist(guildId: string): {
   return JSON.parse(data);
 }
 
-export function saveGuildWhitelist(
+function saveGuildWhitelist(
   guildId: string,
   data: {
     users: string[];

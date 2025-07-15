@@ -8,6 +8,28 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+
+    // ✅ required for node-fetch and cheerio
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   }
 }
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "module": "NodeNext",
+//     "moduleResolution": "NodeNext",
+//     "esModuleInterop": true,
+//     "allowSyntheticDefaultImports": true,
+//     "resolveJsonModule": true,
+//     "strict": true,
+//     "outDir": "dist"
+//   },
+//   "include": ["**/*.ts"],
+//   "exclude": ["node_modules"]
+// }

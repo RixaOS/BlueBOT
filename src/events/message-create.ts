@@ -1,6 +1,6 @@
 import { Events, EmbedBuilder, Colors } from "discord.js";
 import { createEvent } from "../create-event.ts";
-import { getServerConfig, openai } from "../config.ts";
+import { getServerConfig, openai, srcPath } from "../config.ts";
 import fs from "fs";
 import path from "path";
 
@@ -28,16 +28,48 @@ const INVITE_REGEX =
 export const messageCreate = createEvent({
   name: Events.MessageCreate,
   async execute(message) {
+    // const { logger } = context;
     if (
       message.author.bot ||
       !message.inGuild() ||
       !message.content ||
-      message.content.length < 5 ||
+      message.content.length < 2 ||
       !openai
     )
       return;
 
     const guildId = message.guild.id;
+    const whitelistPath = path.join(
+      srcPath,
+      "data",
+      `/moderation/whitelist_${guildId}.json`,
+    );
+
+    // 🛑 Forbidden word(s)
+    const blackWord = message.content.match("cancer");
+    if (blackWord) {
+      await message.delete().catch(() => {});
+      return;
+    }
+
+    if (fs.existsSync(whitelistPath)) {
+      const whitelist = fs.existsSync(whitelistPath)
+        ? JSON.parse(fs.readFileSync(whitelistPath, "utf8"))
+        : { users: [], channels: [], patterns: [] };
+
+      const isWhitelistedUser = whitelist.users.includes(message.author.id);
+      const isWhitelistedChannel = whitelist.channels.includes(
+        message.channel.id,
+      );
+      const isWhitelistedPattern = whitelist.patterns.some((pattern: string) =>
+        message.content.toLowerCase().includes(pattern.toLowerCase()),
+      );
+
+      if (isWhitelistedUser || isWhitelistedChannel || isWhitelistedPattern) {
+        return; // ✅ Skip moderation
+      }
+    }
+
     const logChannelId = getServerConfig(guildId, "logChannelId");
     const modChannel = logChannelId
       ? message.guild.channels.cache.get(logChannelId)
@@ -49,11 +81,6 @@ export const messageCreate = createEvent({
       await message.delete().catch(() => {});
       return;
     }
-
-    const whitelistPatterns = [/Gay ass!/i, /Get out this dick/i, /wtf/i];
-
-    if (whitelistPatterns.some((pattern) => pattern.test(message.content)))
-      return;
 
     // 🔍 Use GPT to evaluate for toxicity/rule breaking
     try {
