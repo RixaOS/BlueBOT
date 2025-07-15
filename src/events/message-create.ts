@@ -27,8 +27,8 @@ const INVITE_REGEX =
 
 export const messageCreate = createEvent({
   name: Events.MessageCreate,
-  async execute(message, context) {
-    const { logger } = context;
+  async execute(message) {
+    // const { logger } = context;
     if (
       message.author.bot ||
       !message.inGuild() ||

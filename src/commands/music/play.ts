@@ -71,7 +71,6 @@
 import {
   ApplicationCommandType,
   CommandInteraction,
-  PermissionFlagsBits,
   GuildMember,
   VoiceChannel,
 } from "discord.js";
